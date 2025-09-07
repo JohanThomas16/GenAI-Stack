@@ -1,0 +1,64 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom toggle switch styling */
+.toggle-checkbox:checked {
+  @apply: right-0 border-green-400;
+  right: 0;
+  border-color: #68d391;
+}
+.toggle-checkbox:checked + .toggle-label {
+  @apply: bg-green-400;
+  background-color: #68d391;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a1a1a1;
+}
+
+/* React Flow custom styles */
+.react-flow__node {
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  background: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.react-flow__node.selected {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+.react-flow__handle {
+  width: 8px;
+  height: 8px;
+  background: #6b7280;
+  border: 2px solid white;
+}
+
+.react-flow__handle.react-flow__handle-top,
+.react-flow__handle.react-flow__handle-bottom {
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.react-flow__handle.react-flow__handle-left,
+.react-flow__handle.react-flow__handle-right {
+  top: 50%;
+  transform: translateY(-50%);
+}
