@@ -1,8 +1,9 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 import time
 import uuid
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 
 app = FastAPI(
     title="GenAI Stack API",
@@ -24,6 +25,20 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Pydantic models for request validation
+class ChatSessionRequest(BaseModel):
+    workflow_id: Optional[str] = "default"
+
+class MessageRequest(BaseModel):
+    message: str
+
+class WorkflowRequest(BaseModel):
+    id: Optional[str] = None
+    name: Optional[str] = "Untitled Workflow"
+    description: Optional[str] = ""
+    nodes: List[Dict] = []
+    edges: List[Dict] = []
 
 # In-memory storage
 chat_sessions: Dict[str, Dict] = {}
@@ -59,16 +74,15 @@ async def test_endpoint():
 # Chat Session Endpoints
 @app.get("/api/v1/chat/sessions")
 async def list_chat_sessions():
-    """GET endpoint for listing chat sessions"""
     return {
         "sessions": list(chat_sessions.values()),
         "count": len(chat_sessions)
     }
 
 @app.post("/api/v1/chat/sessions")
-async def create_chat_session(request: Dict[str, Any]):
+async def create_chat_session(request: ChatSessionRequest):
     session_id = str(uuid.uuid4())
-    workflow_id = request.get("workflow_id", "default")
+    workflow_id = request.workflow_id
     
     chat_sessions[session_id] = {
         "id": session_id,
@@ -91,11 +105,11 @@ async def get_chat_session(session_id: str):
     return chat_sessions[session_id]
 
 @app.post("/api/v1/chat/sessions/{session_id}/messages")
-async def send_message(session_id: str, request: Dict[str, Any]):
+async def send_message(session_id: str, request: MessageRequest):
     if session_id not in chat_sessions:
         raise HTTPException(status_code=404, detail="Session not found")
     
-    message = request.get("message", "")
+    message = request.message
     user_message = {
         "id": str(uuid.uuid4()),
         "type": "user",
@@ -103,11 +117,11 @@ async def send_message(session_id: str, request: Dict[str, Any]):
         "timestamp": time.time()
     }
     
-    # Simple echo response
+    # Simple echo response (replace with actual AI logic)
     bot_response = {
         "id": str(uuid.uuid4()),
         "type": "assistant",
-        "content": f"Echo: {message}",
+        "content": f"Hello! You said: {message}. This is a demo response from GenAI Stack!",
         "timestamp": time.time()
     }
     
@@ -115,13 +129,14 @@ async def send_message(session_id: str, request: Dict[str, Any]):
     
     return {
         "response": bot_response["content"],
-        "message_id": bot_response["id"]
+        "message_id": bot_response["id"],
+        "user_message": user_message,
+        "bot_message": bot_response
     }
 
 # Workflow Endpoints
 @app.get("/api/v1/workflows")
 async def list_workflows():
-    """GET endpoint for listing workflows"""
     return {
         "workflows": list(workflows.values()),
         "count": len(workflows)
@@ -143,19 +158,45 @@ async def get_workflow(workflow_id: str):
     }
 
 @app.post("/api/v1/workflows")
-async def save_workflow(request: Dict[str, Any]):
-    workflow_id = request.get("id", str(uuid.uuid4()))
+async def save_workflow(request: WorkflowRequest):
+    workflow_id = request.id or str(uuid.uuid4())
+    
     workflows[workflow_id] = {
         "id": workflow_id,
-        "name": request.get("name", "Untitled Workflow"),
-        "description": request.get("description", ""),
-        "nodes": request.get("nodes", []),
-        "edges": request.get("edges", []),
-        "updated_at": time.time()
+        "name": request.name,
+        "description": request.description,
+        "nodes": request.nodes,
+        "edges": request.edges,
+        "updated_at": time.time(),
+        "created_at": workflows.get(workflow_id, {}).get("created_at", time.time())
     }
     
     return {
         "success": True,
         "workflow_id": workflow_id,
-        "message": "Workflow saved successfully"
+        "message": "Workflow saved successfully",
+        "workflow": workflows[workflow_id]
+    }
+
+@app.put("/api/v1/workflows/{workflow_id}")
+async def update_workflow(workflow_id: str, request: WorkflowRequest):
+    if workflow_id not in workflows:
+        workflows[workflow_id] = {
+            "id": workflow_id,
+            "created_at": time.time()
+        }
+    
+    workflows[workflow_id].update({
+        "name": request.name,
+        "description": request.description,
+        "nodes": request.nodes,
+        "edges": request.edges,
+        "updated_at": time.time()
+    })
+    
+    return {
+        "success": True,
+        "workflow_id": workflow_id,
+        "message": "Workflow updated successfully",
+        "workflow": workflows[workflow_id]
     }
