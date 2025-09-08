@@ -1,6 +1,8 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import time
+import uuid
+from typing import List, Dict, Any
 
 app = FastAPI(
     title="GenAI Stack API",
@@ -10,7 +12,7 @@ app = FastAPI(
     redoc_url="/redoc"
 )
 
-# CORS middleware - ADD YOUR FRONTEND URL
+# CORS middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -22,6 +24,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# In-memory storage (for demo purposes)
+chat_sessions: Dict[str, Dict] = {}
+workflows: Dict[str, Dict] = {}
 
 @app.get("/")
 async def root():
@@ -50,54 +56,86 @@ async def health_check():
 async def test_endpoint():
     return {"test": "API is working", "endpoint": "/api/v1/test"}
 
-# from fastapi import FastAPI
-# from fastapi.middleware.cors import CORSMiddleware
-# import time
+# Chat Session Endpoints
+@app.post("/api/v1/chat/sessions")
+async def create_chat_session(request: Dict[str, Any]):
+    session_id = str(uuid.uuid4())
+    workflow_id = request.get("workflow_id", "default")
+    
+    chat_sessions[session_id] = {
+        "id": session_id,
+        "workflow_id": workflow_id,
+        "created_at": time.time(),
+        "messages": []
+    }
+    
+    return {
+        "session_id": session_id,
+        "workflow_id": workflow_id,
+        "status": "created"
+    }
 
-# app = FastAPI(
-#     title="GenAI Stack API",
-#     description="No-Code Workflow Builder API",
-#     version="1.0.0",
-#     docs_url="/docs",
-#     redoc_url="/redoc"
-# )
+@app.get("/api/v1/chat/sessions/{session_id}")
+async def get_chat_session(session_id: str):
+    if session_id not in chat_sessions:
+        raise HTTPException(status_code=404, detail="Session not found")
+    
+    return chat_sessions[session_id]
 
-# # CORS middleware
-# app.add_middleware(
-#     CORSMiddleware,
-#     allow_origins=["*"],  # In production, specify your frontend URL
-#     allow_credentials=True,
-#     allow_methods=["*"],
-#     allow_headers=["*"],
-# )
+@app.post("/api/v1/chat/sessions/{session_id}/messages")
+async def send_message(session_id: str, request: Dict[str, Any]):
+    if session_id not in chat_sessions:
+        raise HTTPException(status_code=404, detail="Session not found")
+    
+    message = request.get("message", "")
+    user_message = {
+        "id": str(uuid.uuid4()),
+        "type": "user",
+        "content": message,
+        "timestamp": time.time()
+    }
+    
+    # Simple echo response (replace with actual AI logic)
+    bot_response = {
+        "id": str(uuid.uuid4()),
+        "type": "assistant",
+        "content": f"Echo: {message}",
+        "timestamp": time.time()
+    }
+    
+    chat_sessions[session_id]["messages"].extend([user_message, bot_response])
+    
+    return {
+        "response": bot_response["content"],
+        "message_id": bot_response["id"]
+    }
 
-# @app.get("/")
-# async def root():
-#     return {
-#         "message": "GenAI Stack API is running!",
-#         "version": "1.0.0",
-#         "status": "healthy",
-#         "timestamp": time.time()
-#     }
+@app.get("/api/v1/workflows/{workflow_id}")
+async def get_workflow(workflow_id: str):
+    # Return a demo workflow
+    return {
+        "id": workflow_id,
+        "name": "Chat With AI",
+        "description": "Demo workflow",
+        "nodes": [],
+        "edges": [],
+        "created_at": time.time()
+    }
 
-# @app.get("/health")
-# async def health_check():
-#     return {
-#         "status": "healthy",
-#         "version": "1.0.0",
-#         "timestamp": time.time(),
-#         "database": "connected",
-#         "services": {
-#             "api": "running",
-#             "database": "connected",
-#             "vector_store": "available"
-#         }
-#     }
-
-# @app.get("/api/v1/test")
-# async def test_endpoint():
-#     return {"test": "API is working", "endpoint": "/api/v1/test"}
-
-# if __name__ == "__main__":
-#     import uvicorn
-#     uvicorn.run(app, host="0.0.0.0", port=8000)
+@app.post("/api/v1/workflows")
+async def save_workflow(request: Dict[str, Any]):
+    workflow_id = request.get("id", str(uuid.uuid4()))
+    workflows[workflow_id] = {
+        "id": workflow_id,
+        "name": request.get("name", "Untitled Workflow"),
+        "description": request.get("description", ""),
+        "nodes": request.get("nodes", []),
+        "edges": request.get("edges", []),
+        "updated_at": time.time()
+    }
+    
+    return {
+        "success": True,
+        "workflow_id": workflow_id,
+        "message": "Workflow saved successfully"
+    }
