@@ -111,9 +111,11 @@ function WorkflowBuilder() {
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <WorkflowBuilder />
-    </QueryClientProvider>
+   <div className="flex flex-col h-full">
+      <QueryClientProvider client={queryClient}>
+        <WorkflowBuilder />
+      </QueryClientProvider>
+    </div>
   );
 }
 
