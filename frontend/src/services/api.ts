@@ -80,7 +80,10 @@ export const chatAPI = {
   getMessages: (sessionId: string) => 
     api.get<ChatMessage[]>(`/api/v1/chat/sessions/${sessionId}/messages`),
  sendMessage: (message: string, workflowId?: string, sessionId?: string) =>
-  api.post('/api/v1/chat/sessions/${sessionId}/messages', { message, workflow_id: workflowId }),
+    api.post(
+      `/api/v1/chat/sessions/${sessionId}/messages`,
+      { message, workflow_id: workflowId }
+    ),
 };
 
 export const nodeAPI = {
