@@ -2,7 +2,6 @@
 
 <div align="center">
 
-![GenAI Stack Logo](docs/images/genai-stack-logo.png)
 
 **Build Intelligent AI Workflows Without Code**
 
