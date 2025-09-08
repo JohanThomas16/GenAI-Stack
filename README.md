@@ -126,14 +126,9 @@ Or use helper scripts
 Deploy to Kubernetes
 kubectl apply -f deployment/kubernetes/
 
-See [Deployment Guide](docs/deployment-guide.md) for detailed instructions.
 
-## 📚 Documentation
+ [⚙️ Setup Guide](docs/setup-guide.md)
 
-- [🏗️ Architecture Overview](docs/architecture.md)
-- [📖 API Documentation](docs/api-documentation.md)
-- [⚙️ Setup Guide](docs/setup-guide.md)
-- [🚀 Deployment Guide](docs/deployment-guide.md)
 
 ## 🙏 Acknowledgments
 
