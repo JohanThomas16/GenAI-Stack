@@ -58,16 +58,6 @@ docker-compose -f docker-compose.prod.yml up -d
 - **Backend API**: http://localhost:8000
 - **API Documentation**: http://localhost:8000/docs
 
-## 📋 Environment Variables
-
-| Variable | Description | Required |
-|----------|-------------|----------|
-| `OPENAI_API_KEY` | OpenAI API key for GPT models | ✅ |
-| `GEMINI_API_KEY` | Google Gemini API key | ❌ |
-| `SERP_API_KEY` | SerpAPI key for web search | ❌ |
-| `DATABASE_URL` | PostgreSQL connection string | ✅ |
-| `CHROMA_URL` | ChromaDB service URL | ✅ |
-| `REDIS_URL` | Redis connection string | ✅ |
 
 ## 🎮 Usage
 
