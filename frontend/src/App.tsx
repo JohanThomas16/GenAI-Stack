@@ -13,6 +13,25 @@ import { validateWorkflowConnections } from './utils/connectionValidation';
 import './styles/globals.css';
 import './styles/reactflow.css';
 
+
+declare module 'react-flow-renderer' {
+  interface NodeData {
+    [key: string]: any;
+  }
+}
+
+// Update the handleDragStart function
+const handleDragStart = useCallback((event: React.DragEvent, component: any) => {
+  // Drag start is handled in ComponentLibrary
+}, []);
+
+// Update handleNodeUpdate
+const handleNodeUpdate = useCallback((nodeId: string, updates: any) => {
+  const updatedNodes = nodes.map((node: any) =>
+    node.id === nodeId ? { ...node, ...updates } : node
+  );
+  setNodes(updatedNodes);
+}, [nodes, setNodes]);
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
