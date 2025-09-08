@@ -1,36 +1,55 @@
 import React from 'react';
+import { NodeType } from '../../types/workflow';
+import { getNodeDefaults, getNodeDisplayName } from '../../utils/nodeDefaults';
 
-const components = [
+interface ComponentItem {
+  type: NodeType;
+  name: string;
+  description: string;
+  icon: string;
+}
+
+interface ComponentLibraryProps {
+  onDragStart: (event: React.DragEvent, component: ComponentItem) => void;
+}
+
+const components: ComponentItem[] = [
   {
     type: 'userQuery',
     name: 'User Query',
-    icon: '💬',
-    description: 'Input'
+    description: 'Input',
+    icon: '💬'
   },
   {
     type: 'llm',
     name: 'LLM (OpenAI)',
-    icon: '🤖',
-    description: 'LLM (OpenAI)'
+    description: 'LLM (OpenAI)',
+    icon: '🤖'
   },
   {
     type: 'knowledgeBase',
     name: 'Knowledge Base',
-    icon: '📚',
-    description: 'Knowledge Base'
+    description: 'Knowledge Base',
+    icon: '📚'
   },
   {
     type: 'output',
     name: 'Output',
-    icon: '📤',
-    description: 'Output'
+    description: 'Output',
+    icon: '📤'
   }
 ];
 
-export const ComponentLibrary: React.FC = () => {
-  const onDragStart = (event: React.DragEvent, nodeType: string) => {
-    event.dataTransfer.setData('application/reactflow', nodeType);
-    event.dataTransfer.effectAllowed = 'move';
+export const ComponentLibrary: React.FC<ComponentLibraryProps> = ({ onDragStart }) => {
+  const handleDragStart = (event: React.DragEvent, component: ComponentItem) => {
+    event.dataTransfer.setData('application/json', JSON.stringify({
+      type: component.type,
+      name: component.name,
+      icon: component.icon,
+      data: getNodeDefaults(component.type)
+    }));
+    event.dataTransfer.effectAllowed = 'copy';
+    onDragStart(event, component);
   };
 
   return (
@@ -43,9 +62,9 @@ export const ComponentLibrary: React.FC = () => {
         {components.map((component) => (
           <div
             key={component.type}
-            className="flex items-center space-x-3 p-2 rounded-lg border border-gray-200 cursor-grab hover:border-gray-300 hover:bg-gray-50 transition-colors"
+            className="drag-item flex items-center space-x-3 p-2 rounded-lg border border-gray-200 cursor-grab hover:border-gray-300 hover:bg-gray-50 transition-all active:cursor-grabbing"
             draggable
-            onDragStart={(event) => onDragStart(event, component.type)}
+            onDragStart={(event) => handleDragStart(event, component)}
           >
             <span className="text-lg">{component.icon}</span>
             <span className="text-sm font-medium text-gray-900">{component.description}</span>
