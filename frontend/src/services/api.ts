@@ -67,8 +67,8 @@ export const workflowAPI = {
     apiClient.post('/api/v1/chat/sessions', data),
   getChatSession: (id: string) =>
     apiClient.get(`/api/v1/chat/sessions/${id}`),
-  sendMessage: (sessionId: string, data: { message: string }) =>
-    apiClient.post(`/api/v1/chat/sessions/${sessionId}/messages`, data)
+   sendMessage: (message: string, workflowId?: string, sessionId?: string) =>
+  api.post('/api/v1/chat/sessions/${sessionId}/messages', { message, workflow_id: workflowId }),
 };
 
 
