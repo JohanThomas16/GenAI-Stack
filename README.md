@@ -37,8 +37,8 @@ GenAI Stack is a powerful, visual workflow builder that enables anyone to create
 - Python 3.9+ (for local development)
 
 ### 1. Clone Repository
-git clone https://github.com/JohanThomas16/workflow-builder
-cd gwork-flow-builder
+git clone https://github.com/JohanThomas16/GenAI-Stack
+cd gwork-GenAI-Stack
 
 ### 2. Environment Setup
 cp .env.example .env
