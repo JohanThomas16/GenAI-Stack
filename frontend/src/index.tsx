@@ -1,18 +1,11 @@
 import React from 'react';
-import ReactDOM from 'react-dom/client';
+import ReactDOM from 'react-dom';
+import './index.css';
 import App from './App';
-import './styles/globals.css';
-html, body, #root {
-  height: 100%;
-  margin: 0;
-  padding: 0;
-}
-const root = ReactDOM.createRoot(
-  document.getElementById('root') as HTMLElement
-);
 
-root.render(
-  <React.StrictMode>
+ReactDOM.render(
+  <div style={{ height: '100%' }}>
     <App />
-  </React.StrictMode>
+  </div>,
+  document.getElementById('root')
 );
