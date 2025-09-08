@@ -32,24 +32,45 @@ api.interceptors.response.use(
   }
 );
 
+const apiClient = axios.create({
+  baseURL: process.env.REACT_APP_API_URL,
+  headers: {
+    'Content-Type': 'application/json'
+  }
+});
+
 export const workflowAPI = {
-  // Workflow operations
-  getWorkflows: () => api.get<Workflow[]>('/api/v1/workflows'),
-  getWorkflow: (id: string) => api.get<Workflow>(`/api/v1/workflows/${id}`),
-  createWorkflow: (workflow: Omit<Workflow, 'id'>) => 
-    api.post<Workflow>('/api/v1/workflows', workflow),
-  updateWorkflow: (id: string, workflow: Partial<Workflow>) => 
-    api.put<Workflow>(`/api/v1/workflows/${id}`, workflow),
-  deleteWorkflow: (id: string) => api.delete(`/api/v1/workflows/${id}`),
-  
-  // Workflow execution
-  executeWorkflow: (workflowId: string, inputData: any) =>
-    api.post<WorkflowExecution>(`/api/v1/workflows/${workflowId}/execute`, { inputData }),
-  
-  // Validation
-  validateWorkflow: (workflow: { nodes: any[], edges: any[] }) =>
-    api.post('/api/v1/workflows/validate', { configuration: workflow }),
+  // List workflows
+  getWorkflows: () => apiClient.get('/api/v1/workflows'),
+
+  // Get single workflow
+  getWorkflow: (id: string) => apiClient.get(`/api/v1/workflows/${id}`),
+
+  // Create workflow (automatically sends JSON)
+  createWorkflow: (workflow: Omit<Workflow, 'id'>) =>
+    apiClient.post('/api/v1/workflows', workflow),
+
+  // Update workflow
+  updateWorkflow: (id: string, workflow: Partial<Workflow>) =>
+    apiClient.put(`/api/v1/workflows/${id}`, workflow),
+
+  // Delete workflow
+  deleteWorkflow: (id: string) => apiClient.delete(`/api/v1/workflows/${id}`),
+
+  // Validate workflow
+  validateWorkflow: (workflow: { nodes: WorkflowNode[]; edges: WorkflowEdge[] }) =>
+    apiClient.post('/api/v1/workflows/validate', workflow),  // adjust endpoint if needed
+
+  // Chat session endpoints
+  listChatSessions: () => apiClient.get('/api/v1/chat/sessions'),
+  createChatSession: (data: { workflow_id: string }) =>
+    apiClient.post('/api/v1/chat/sessions', data),
+  getChatSession: (id: string) =>
+    apiClient.get(`/api/v1/chat/sessions/${id}`),
+  sendMessage: (sessionId: string, data: { message: string }) =>
+    apiClient.post(`/api/v1/chat/sessions/${sessionId}/messages`, data)
 };
+
 
 export const chatAPI = {
   // Chat operations
