@@ -10,7 +10,6 @@
 [![React 18](https://img.shields.io/badge/react-18.0+-blue.svg)](https://reactjs.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-green.svg)](https://fastapi.tiangolo.com/)
 
-[Demo](https://genai-stack-demo.herokuapp.com) • [Documentation](docs/) • [API Docs](https://api.genai-stack.com/docs) • [Contributing](#contributing)
 
 </div>
 
