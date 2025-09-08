@@ -16,16 +16,16 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "https://web-production-7c76.up.railway.app",  # Your frontend URL
-        "http://localhost:3000",  # For local development
-        "*"  # Allow all origins temporarily
+        "https://web-production-7c76.up.railway.app",
+        "http://localhost:3000",
+        "*"
     ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# In-memory storage (for demo purposes)
+# In-memory storage
 chat_sessions: Dict[str, Dict] = {}
 workflows: Dict[str, Dict] = {}
 
@@ -57,6 +57,14 @@ async def test_endpoint():
     return {"test": "API is working", "endpoint": "/api/v1/test"}
 
 # Chat Session Endpoints
+@app.get("/api/v1/chat/sessions")
+async def list_chat_sessions():
+    """GET endpoint for listing chat sessions"""
+    return {
+        "sessions": list(chat_sessions.values()),
+        "count": len(chat_sessions)
+    }
+
 @app.post("/api/v1/chat/sessions")
 async def create_chat_session(request: Dict[str, Any]):
     session_id = str(uuid.uuid4())
@@ -95,7 +103,7 @@ async def send_message(session_id: str, request: Dict[str, Any]):
         "timestamp": time.time()
     }
     
-    # Simple echo response (replace with actual AI logic)
+    # Simple echo response
     bot_response = {
         "id": str(uuid.uuid4()),
         "type": "assistant",
@@ -110,9 +118,21 @@ async def send_message(session_id: str, request: Dict[str, Any]):
         "message_id": bot_response["id"]
     }
 
+# Workflow Endpoints
+@app.get("/api/v1/workflows")
+async def list_workflows():
+    """GET endpoint for listing workflows"""
+    return {
+        "workflows": list(workflows.values()),
+        "count": len(workflows)
+    }
+
 @app.get("/api/v1/workflows/{workflow_id}")
 async def get_workflow(workflow_id: str):
-    # Return a demo workflow
+    if workflow_id in workflows:
+        return workflows[workflow_id]
+    
+    # Return a demo workflow if not found
     return {
         "id": workflow_id,
         "name": "Chat With AI",
