@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useRef, useState, useEffect } from 'react';
 import {
   ReactFlow,
   addEdge,
@@ -8,12 +8,10 @@ import {
   Controls,
   Background,
   Connection,
-  Edge,
   Node,
   ReactFlowProvider,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-
 import { WorkflowNode, WorkflowEdge } from '../../types/workflow';
 import { UserQueryNode } from './NodeTypes/UserQueryNode';
 import { LLMNode } from './NodeTypes/LLMNode';
@@ -22,6 +20,7 @@ import { OutputNode } from './NodeTypes/OutputNode';
 import { TabHeader } from '../common/TabHeader';
 import { ControlButtons } from '../common/ControlButtons';
 import { Plus } from 'lucide-react';
+import { v4 as uuid } from 'uuid';
 
 const nodeTypes = {
   userQuery: UserQueryNode,
@@ -41,7 +40,7 @@ interface WorkflowCanvasProps {
   onOpenChat: () => void;
 }
 
-export const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({
+const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({
   nodes,
   edges,
   onNodesChange,
@@ -52,24 +51,23 @@ export const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({
   onOpenChat,
 }) => {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
-  const { screenToFlowPosition, zoomIn, zoomOut, fitView, getZoom } = useReactFlow();
-  const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
+  const { project, zoomIn, zoomOut, fitView, getZoom } = useReactFlow();
 
   const [reactNodes, setReactNodes, onReactNodesChange] = useNodesState(nodes);
   const [reactEdges, setReactEdges, onReactEdgesChange] = useEdgesState(edges);
 
-  React.useEffect(() => {
+  // Sync props → state
+  useEffect(() => {
     setReactNodes(nodes);
   }, [nodes, setReactNodes]);
-
-  React.useEffect(() => {
+  useEffect(() => {
     setReactEdges(edges);
   }, [edges, setReactEdges]);
 
   const onConnect = useCallback(
     (params: Connection) => {
       const newEdge: WorkflowEdge = {
-        id: `edge-${params.source}-${params.target}`,
+        id: `edge-${params.source}-${params.target}-${uuid()}`,
         source: params.source!,
         target: params.target!,
         sourceHandle: params.sourceHandle,
@@ -77,10 +75,9 @@ export const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({
         type: 'default',
         animated: false,
       };
-      
-      const updatedEdges = addEdge(newEdge, reactEdges);
-      setReactEdges(updatedEdges);
-      onEdgesChange(updatedEdges);
+      const updated = addEdge(newEdge, reactEdges);
+      setReactEdges(updated);
+      onEdgesChange(updated);
     },
     [reactEdges, setReactEdges, onEdgesChange]
   );
@@ -93,58 +90,43 @@ export const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({
   const onDrop = useCallback(
     (event: React.DragEvent) => {
       event.preventDefault();
-
-      const reactFlowBounds = reactFlowWrapper.current?.getBoundingClientRect();
-      if (!reactFlowBounds) return;
-
+      const bounds = reactFlowWrapper.current?.getBoundingClientRect();
+      if (!bounds) return;
       const data = event.dataTransfer.getData('application/json');
       if (!data) return;
-
       const nodeData = JSON.parse(data);
-      const position = screenToFlowPosition({
-        x: event.clientX - reactFlowBounds.left,
-        y: event.clientY - reactFlowBounds.top,
+      const position = project({
+        x: event.clientX - bounds.left,
+        y: event.clientY - bounds.top,
       });
-
       const newNode: WorkflowNode = {
-        id: `${nodeData.type}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        id: `${nodeData.type}-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
         type: nodeData.type,
         position,
-        data: {
-          ...nodeData.data,
-          label: nodeData.name,
-        },
+        data: { ...nodeData.data, label: nodeData.name },
       };
-
-      const updatedNodes = [...reactNodes, newNode];
-      setReactNodes(updatedNodes);
-      onNodesChange(updatedNodes);
+      const updated = [...reactNodes, newNode];
+      setReactNodes(updated);
+      onNodesChange(updated);
     },
-    [screenToFlowPosition, reactNodes, setReactNodes, onNodesChange]
+    [project, reactNodes, setReactNodes, onNodesChange]
   );
 
   const onNodeClick = useCallback(
-    (event: React.MouseEvent, node: Node) => {
-      event.stopPropagation();
-      const workflowNode = reactNodes.find(n => n.id === node.id) as WorkflowNode;
-      onNodeSelect(workflowNode || null);
+    (_: React.MouseEvent, node: Node) => {
+      const wfNode = reactNodes.find(n => n.id === node.id) as WorkflowNode;
+      onNodeSelect(wfNode || null);
     },
     [reactNodes, onNodeSelect]
   );
 
-  const onPaneClick = useCallback(() => {
-    onNodeSelect(null);
-  }, [onNodeSelect]);
+  const onPaneClick = useCallback(() => onNodeSelect(null), [onNodeSelect]);
 
   const handleNodesChange = useCallback(
     (changes: any) => {
       onReactNodesChange(changes);
-      // Convert back to WorkflowNode[] format
-      const updatedNodes = reactNodes.map(node => ({
-        ...node,
-        type: node.type as any,
-      })) as WorkflowNode[];
-      onNodesChange(updatedNodes);
+      const updated = reactNodes.map(n => ({ ...n })) as WorkflowNode[];
+      onNodesChange(updated);
     },
     [onReactNodesChange, reactNodes, onNodesChange]
   );
@@ -158,20 +140,20 @@ export const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({
   );
 
   return (
-    <div className="flex-1 relative">
+    <div className="flex-1 relative h-full">
       {/* Tab Header */}
       <div className="absolute top-4 left-4 z-10">
         <TabHeader title="Chat With AI" />
       </div>
-      
-      <div 
+
+      <div
         ref={reactFlowWrapper}
-        className="h-full workflow-canvas"
+        className="h-full w-full"
       >
         <ReactFlow
-          nodes={reactNodes.map(node => ({
-            ...node,
-            selected: selectedNode?.id === node.id,
+          nodes={reactNodes.map(n => ({
+            ...n,
+            selected: selectedNode?.id === n.id
           }))}
           edges={reactEdges}
           onNodesChange={handleNodesChange}
@@ -184,11 +166,10 @@ export const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({
           nodeTypes={nodeTypes}
           fitView
           className="bg-gray-50"
-          onInit={setReactFlowInstance}
         >
           <Controls showFitView={false} showInteractive={false} />
           <Background color="#e5e7eb" gap={16} />
-          
+
           {/* Empty State */}
           {reactNodes.length === 0 && (
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -202,29 +183,29 @@ export const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({
           )}
         </ReactFlow>
       </div>
-      
+
       {/* Bottom Controls */}
       <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-10">
         <ControlButtons
-          onZoomIn={() => zoomIn()}
-          onZoomOut={() => zoomOut()}
-          onFitView={() => fitView()}
+          onZoomIn={zoomIn}
+          onZoomOut={zoomOut}
+          onFitView={fitView}
           zoomLevel={getZoom()}
         />
       </div>
-      
+
       {/* Action Buttons */}
       {reactNodes.length > 0 && (
         <div className="absolute bottom-4 right-4 flex items-center space-x-2 z-10">
           <button
             onClick={onSave}
-            className="bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors"
+            className="bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition"
           >
             Build Stack
           </button>
           <button
             onClick={onOpenChat}
-            className="w-10 h-10 bg-green-600 text-white rounded-full flex items-center justify-center hover:bg-green-700 transition-colors"
+            className="w-10 h-10 bg-green-600 text-white rounded-full flex items-center justify-center hover:bg-green-700 transition"
           >
             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
@@ -236,11 +217,8 @@ export const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({
   );
 };
 
-// Wrapper component with ReactFlowProvider
-export const WorkflowCanvasWrapper: React.FC<WorkflowCanvasProps> = (props) => {
-  return (
-    <ReactFlowProvider>
-      <WorkflowCanvas {...props} />
-    </ReactFlowProvider>
-  );
-};
+export const WorkflowCanvasWrapper: React.FC<WorkflowCanvasProps> = (props) => (
+  <ReactFlowProvider>
+    <WorkflowCanvas {...props} />
+  </ReactFlowProvider>
+);
