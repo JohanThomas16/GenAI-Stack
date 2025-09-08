@@ -135,22 +135,6 @@ See [Deployment Guide](docs/deployment-guide.md) for detailed instructions.
 - [⚙️ Setup Guide](docs/setup-guide.md)
 - [🚀 Deployment Guide](docs/deployment-guide.md)
 
-## 🤝 Contributing
-
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
-
-### Development Workflow
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
 ## 🙏 Acknowledgments
 
 - [OpenAI](https://openai.com/) for GPT models
@@ -158,14 +142,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [FastAPI](https://fastapi.tiangolo.com/) for the backend framework
 - [React Flow](https://reactflow.dev/) for the workflow canvas
 - [ChromaDB](https://www.trychroma.com/) for vector storage
-
-## 📞 Support
-
-- 📧 Email: support@genai-stack.com
-- 💬 Discord: [Join our community](https://discord.gg/genai-stack)
-- 🐛 Issues: [GitHub Issues](https://github.com/your-username/genai-stack/issues)
-
----
 
 <div align="center">
 Made BY JOHAN THOMAS ISAAC
