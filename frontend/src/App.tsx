@@ -1,7 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { Toaster } from 'react-hot-toast';
-
 import { Header } from './components/common/Header';
 import { ComponentLibrary } from './components/workflow/ComponentLibrary';
 import { WorkflowCanvasWrapper } from './components/workflow/WorkflowCanvas';
@@ -9,29 +8,9 @@ import { ConfigurationPanel } from './components/workflow/ConfigurationPanel';
 import { ChatInterface } from './components/chat/ChatInterface';
 import { useWorkflow } from './hooks/useWorkflow';
 import { validateWorkflowConnections } from './utils/connectionValidation';
-
 import './styles/globals.css';
 import './styles/reactflow.css';
 
-
-declare module 'react-flow-renderer' {
-  interface NodeData {
-    [key: string]: any;
-  }
-}
-
-// Update the handleDragStart function
-const handleDragStart = useCallback((event: React.DragEvent, component: any) => {
-  // Drag start is handled in ComponentLibrary
-}, []);
-
-// Update handleNodeUpdate
-const handleNodeUpdate = useCallback((nodeId: string, updates: any) => {
-  const updatedNodes = nodes.map((node: any) =>
-    node.id === nodeId ? { ...node, ...updates } : node
-  );
-  setNodes(updatedNodes);
-}, [nodes, setNodes]);
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -65,9 +44,8 @@ function WorkflowBuilder() {
     
     if (!validation.isValid) {
       console.warn('Workflow validation failed:', validation.errors);
-      // You could show validation errors to user here
     }
-
+    
     saveWorkflow({
       id: workflowId,
       name: 'Chat With AI',
@@ -76,7 +54,7 @@ function WorkflowBuilder() {
   }, [nodes, edges, saveWorkflow, workflowId]);
 
   const handleNodeUpdate = useCallback((nodeId: string, updates: any) => {
-    const updatedNodes = nodes.map(node =>
+    const updatedNodes = nodes.map((node: any) =>
       node.id === nodeId ? { ...node, ...updates } : node
     );
     setNodes(updatedNodes);
@@ -113,7 +91,7 @@ function WorkflowBuilder() {
           />
         )}
       </div>
-
+      
       <ChatInterface 
         isOpen={chatOpen}
         onClose={() => setChatOpen(false)}
