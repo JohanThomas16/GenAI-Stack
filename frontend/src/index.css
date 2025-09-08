@@ -1,0 +1,13 @@
+/* Make the app fill the viewport */
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* Ensure all flex children can grow */
+#root > div {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
