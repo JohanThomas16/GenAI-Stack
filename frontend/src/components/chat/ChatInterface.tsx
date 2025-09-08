@@ -1,73 +1,29 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { X, Send, Bot } from 'lucide-react';
+import { ChatMessage } from './ChatMessage';
+import { ChatInput } from './ChatInput';
+import { useChat } from '../../hooks/useChat';
+import { ChatMessage as ChatMessageType } from '../../types/nodes';
 
 interface ChatInterfaceProps {
   isOpen: boolean;
   onClose: () => void;
-  workflow: any;
+  workflowId?: string;
 }
 
-interface Message {
-  id: string;
-  type: 'user' | 'assistant';
-  content: string;
-  timestamp: Date;
-}
-
-export const ChatInterface: React.FC<ChatInterfaceProps> = ({ 
-  isOpen, 
-  onClose, 
-  workflow 
+export const ChatInterface: React.FC<ChatInterfaceProps> = ({
+  isOpen,
+  onClose,
+  workflowId,
 }) => {
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { messages, isTyping, sendMessage, isLoading } = useChat(workflowId);
 
   useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [messages]);
-
-  const sendMessage = async () => {
-    if (!input.trim() || isLoading) return;
-
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      type: 'user',
-      content: input,
-      timestamp: new Date()
-    };
-
-    setMessages(prev => [...prev, userMessage]);
-    setInput('');
-    setIsLoading(true);
-
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      const assistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        type: 'assistant',
-        content: `Based on your query "${userMessage.content}", here's the response from your workflow. This demonstrates the integration of your configured components including the Knowledge Base, LLM processing, and Web Search capabilities.`,
-        timestamp: new Date()
-      };
-      
-      setMessages(prev => [...prev, assistantMessage]);
-    } catch (error) {
-      console.error('Error sending message:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
-    }
-  };
+  }, [messages, isTyping]);
 
   if (!isOpen) return null;
 
@@ -86,9 +42,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 transition-colors"
           >
-            <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-            </svg>
+            <X className="w-6 h-6" />
           </button>
         </div>
 
@@ -105,68 +59,38 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
           ) : (
             <div className="space-y-4">
               {messages.map((message) => (
-                <div
-                  key={message.id}
-                  className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
-                >
-                  <div
-                    className={`max-w-[70%] rounded-lg px-4 py-2 ${
-                      message.type === 'user'
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-gray-100 text-gray-900'
-                    }`}
-                  >
-                    {message.type === 'assistant' && (
-                      <div className="flex items-center mb-2">
-                        <div className="w-6 h-6 bg-green-600 rounded-full flex items-center justify-center mr-2">
-                          <span className="text-white text-xs font-bold">G</span>
-                        </div>
-                      </div>
-                    )}
-                    <p className="text-sm">{message.content}</p>
-                  </div>
-                </div>
+                <ChatMessage key={message.id} message={message} />
               ))}
-              {isLoading && (
+              
+              {isTyping && (
                 <div className="flex justify-start">
                   <div className="bg-gray-100 rounded-lg px-4 py-2 max-w-[70%]">
-                    <div className="flex items-center">
-                      <div className="w-6 h-6 bg-green-600 rounded-full flex items-center justify-center mr-2">
-                        <span className="text-white text-xs font-bold">G</span>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-6 h-6 bg-green-600 rounded-full flex items-center justify-center">
+                        <Bot className="w-3 h-3 text-white" />
                       </div>
                       <span className="text-sm text-gray-600">Thinking...</span>
+                      <div className="flex space-x-1">
+                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                      </div>
                     </div>
                   </div>
                 </div>
               )}
+              
               <div ref={messagesEndRef} />
             </div>
           )}
         </div>
 
         {/* Input */}
-        <div className="p-4 border-t border-gray-200">
-          <div className="flex space-x-3">
-            <input
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder="Send a message"
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              disabled={isLoading}
-            />
-            <button
-              onClick={sendMessage}
-              disabled={!input.trim() || isLoading}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
-              </svg>
-            </button>
-          </div>
-        </div>
+        <ChatInput 
+          onSendMessage={sendMessage}
+          disabled={isLoading}
+          placeholder="Send a message"
+        />
       </div>
     </div>
   );
