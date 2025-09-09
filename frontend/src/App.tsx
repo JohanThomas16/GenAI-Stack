@@ -14,6 +14,30 @@ const queryClient = new QueryClient({
 });
 
 function App() {
+  const [nodes, setNodes] = React.useState<WorkflowNode[]>([]);
+  const [edges, setEdges] = React.useState<WorkflowEdge[]>([]);
+  const [selectedNode, setSelectedNode] = React.useState<WorkflowNode | null>(null);
+
+  const handleNodesChange = (newNodes: WorkflowNode[]) => {
+    setNodes(newNodes);
+  };
+
+  const handleEdgesChange = (newEdges: WorkflowEdge[]) => {
+    setEdges(newEdges);
+  };
+
+  const handleNodeSelect = (node: WorkflowNode | null) => {
+    setSelectedNode(node);
+  };
+
+  const handleSave = async () => {
+    // Save handler code here...
+  };
+
+  const handleOpenChat = () => {
+    // Open chat logic here...
+  };
+
   return (
     <div className="flex flex-col h-full min-h-screen">
       <QueryClientProvider client={queryClient}>
@@ -31,5 +55,3 @@ function App() {
     </div>
   );
 }
-
-export default App;
