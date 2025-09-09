@@ -1,9 +1,6 @@
-// src/App.tsx
-
 import React from 'react';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { WorkflowCanvasWrapper } from './components/workflow/WorkflowCanvas';
-// Import your styles (adjust the path if needed)
 import './styles/globals.css';
 
 const queryClient = new QueryClient({
@@ -13,11 +10,8 @@ const queryClient = new QueryClient({
 });
 
 function App() {
-  // Provide default required props to WorkflowCanvasWrapper.
-  // Replace these with your actual app's state management if necessary.
-  // For example, use hooks or context to share state.
-
-  // Example props (replace with your managed state if needed):
+  // TEMP placeholder state/handlers for build to succeed
+  // In production, replace with useWorkflow/useState for nodes, edges, etc.
   const nodes: any[] = [];
   const edges: any[] = [];
   const [selectedNode, setSelectedNode] = React.useState(null);
