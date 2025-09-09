@@ -1,6 +1,10 @@
 import React from 'react';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { WorkflowCanvasWrapper } from './components/workflow/WorkflowCanvas';
+import { WorkflowNode, WorkflowEdge } from './types/workflow';
+import { workflowAPI } from './services/api';
+import type { Workflow } from './types/workflow'; 
+
 import './styles/globals.css';
 
 const queryClient = new QueryClient({
@@ -10,18 +14,6 @@ const queryClient = new QueryClient({
 });
 
 function App() {
-  // TEMP placeholder state/handlers for build to succeed
-  // In production, replace with useWorkflow/useState for nodes, edges, etc.
-  const nodes: any[] = [];
-  const edges: any[] = [];
-  const [selectedNode, setSelectedNode] = React.useState(null);
-
-  const handleNodesChange = (newNodes: any[]) => {};
-  const handleEdgesChange = (newEdges: any[]) => {};
-  const handleNodeSelect = (node: any) => setSelectedNode(node);
-  const handleSave = () => {};
-  const handleOpenChat = () => {};
-
   return (
     <div className="flex flex-col h-full min-h-screen">
       <QueryClientProvider client={queryClient}>

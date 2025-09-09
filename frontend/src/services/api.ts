@@ -1,5 +1,6 @@
 import axios from 'axios';
-import { Workflow, WorkflowExecution } from '../types/workflow';
+import type { Workflow, WorkflowNode, WorkflowEdge } from '../types/workflow';
+
 import { ChatMessage, ChatSession } from '../types/nodes';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';

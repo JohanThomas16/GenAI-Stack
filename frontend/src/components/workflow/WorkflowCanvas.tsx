@@ -51,18 +51,18 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({
   onOpenChat,
 }) => {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
-  const { project, zoomIn, zoomOut, fitView, getZoom } = useReactFlow();
+  const { zoomIn, zoomOut, fitView, getZoom } = useReactFlow();
 
   const [reactNodes, setReactNodes, onReactNodesChange] = useNodesState(nodes);
   const [reactEdges, setReactEdges, onReactEdgesChange] = useEdgesState(edges);
 
-  // Sync props → state
+  // Sync props → state with deep comparison to avoid infinite loops
   useEffect(() => {
     setReactNodes(nodes);
-  }, [nodes, setReactNodes]);
+  }, [JSON.stringify(nodes)]);
   useEffect(() => {
     setReactEdges(edges);
-  }, [edges, setReactEdges]);
+  }, [JSON.stringify(edges)]);
 
   const onConnect = useCallback(
     (params: Connection) => {
@@ -92,24 +92,30 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({
       event.preventDefault();
       const bounds = reactFlowWrapper.current?.getBoundingClientRect();
       if (!bounds) return;
+
       const data = event.dataTransfer.getData('application/json');
       if (!data) return;
+
       const nodeData = JSON.parse(data);
-      const position = project({
+
+      // Calculate position manually because '@xyflow/react' doesn't expose `project`
+      const position = {
         x: event.clientX - bounds.left,
         y: event.clientY - bounds.top,
-      });
+      };
+
       const newNode: WorkflowNode = {
         id: `${nodeData.type}-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
         type: nodeData.type,
         position,
         data: { ...nodeData.data, label: nodeData.name },
       };
+
       const updated = [...reactNodes, newNode];
       setReactNodes(updated);
       onNodesChange(updated);
     },
-    [project, reactNodes, setReactNodes, onNodesChange]
+    [reactNodes, setReactNodes, onNodesChange]
   );
 
   const onNodeClick = useCallback(
@@ -125,7 +131,7 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({
   const handleNodesChange = useCallback(
     (changes: any) => {
       onReactNodesChange(changes);
-      const updated = reactNodes.map(n => ({ ...n })) as WorkflowNode[];
+      const updated = reactNodes.map(n => ({ ...n }));
       onNodesChange(updated);
     },
     [onReactNodesChange, reactNodes, onNodesChange]
@@ -140,49 +146,44 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({
   );
 
   return (
-    <div className="flex-1 relative h-full">
+    <div className="flex-1 relative h-full" ref={reactFlowWrapper}>
       {/* Tab Header */}
       <div className="absolute top-4 left-4 z-10">
         <TabHeader title="Chat With AI" />
       </div>
 
-      <div
-        ref={reactFlowWrapper}
-        className="h-full w-full"
+      <ReactFlow
+        nodes={reactNodes.map(n => ({
+          ...n,
+          selected: selectedNode?.id === n.id,
+        }))}
+        edges={reactEdges}
+        onNodesChange={handleNodesChange}
+        onEdgesChange={handleEdgesChange}
+        onConnect={onConnect}
+        onDrop={onDrop}
+        onDragOver={onDragOver}
+        onNodeClick={onNodeClick}
+        onPaneClick={onPaneClick}
+        nodeTypes={nodeTypes}
+        fitView
+        className="bg-gray-50"
+        style={{ width: '100%', height: '100%' }}
       >
-        <ReactFlow
-          nodes={reactNodes.map(n => ({
-            ...n,
-            selected: selectedNode?.id === n.id
-          }))}
-          edges={reactEdges}
-          onNodesChange={handleNodesChange}
-          onEdgesChange={handleEdgesChange}
-          onConnect={onConnect}
-          onDrop={onDrop}
-          onDragOver={onDragOver}
-          onNodeClick={onNodeClick}
-          onPaneClick={onPaneClick}
-          nodeTypes={nodeTypes}
-          fitView
-          className="bg-gray-50"
-        >
-          <Controls showFitView={false} showInteractive={false} />
-          <Background color="#e5e7eb" gap={16} />
+        <Controls showFitView={false} showInteractive={false} />
+        <Background color="#e5e7eb" gap={16} />
 
-          {/* Empty State */}
-          {reactNodes.length === 0 && (
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <div className="text-center">
-                <div className="w-16 h-16 mx-auto mb-4 bg-green-100 rounded-full flex items-center justify-center">
-                  <Plus className="w-8 h-8 text-green-600" />
-                </div>
-                <p className="text-gray-500 font-medium">Drag & drop to get started</p>
+        {reactNodes.length === 0 && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div className="text-center">
+              <div className="w-16 h-16 mx-auto mb-4 bg-green-100 rounded-full flex items-center justify-center">
+                <Plus className="w-8 h-8 text-green-600" />
               </div>
+              <p className="text-gray-500 font-medium">Drag & drop to get started</p>
             </div>
-          )}
-        </ReactFlow>
-      </div>
+          </div>
+        )}
+      </ReactFlow>
 
       {/* Bottom Controls */}
       <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-10">

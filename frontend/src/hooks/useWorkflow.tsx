@@ -12,13 +12,15 @@ import {
   ReactFlowProvider,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { WorkflowNode, WorkflowEdge } from '../../types/workflow';
-import { UserQueryNode } from './NodeTypes/UserQueryNode';
-import { LLMNode } from './NodeTypes/LLMNode';
-import { KnowledgeBaseNode } from './NodeTypes/KnowledgeBaseNode';
-import { OutputNode } from './NodeTypes/OutputNode';
-import { TabHeader } from '../common/TabHeader';
-import { ControlButtons } from '../common/ControlButtons';
+import { WorkflowNode, WorkflowEdge } from '../types/workflow';
+
+import { UserQueryNode } from '../components/workflow/NodeTypes/UserQueryNode';
+import { LLMNode } from '../components/workflow/NodeTypes/LLMNode';
+import { KnowledgeBaseNode } from '../components/workflow/NodeTypes/KnowledgeBaseNode';
+import { OutputNode } from '../components/workflow/NodeTypes/OutputNode';
+import { TabHeader } from '../components/common/TabHeader';
+import { ControlButtons } from '../components/common/ControlButtons';
+
 import { Plus } from 'lucide-react';
 import { v4 as uuid } from 'uuid';
 
@@ -51,7 +53,8 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({
   onOpenChat,
 }) => {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
-  const { project, zoomIn, zoomOut, fitView, getZoom } = useReactFlow();
+  const { project, zoomIn, zoomOut, fitView, getZoom } = useReactFlow() as any;
+;
 
   const [reactNodes, setReactNodes, onReactNodesChange] = useNodesState(nodes);
   const [reactEdges, setReactEdges, onReactEdgesChange] = useEdgesState(edges);

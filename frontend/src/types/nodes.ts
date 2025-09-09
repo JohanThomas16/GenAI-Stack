@@ -36,19 +36,32 @@ export interface OutputNodeData extends BaseNodeData {
   includeMetadata: boolean;
 }
 
+// export interface ChatMessage {
+//   id: string;
+//   type: 'user' | 'assistant' | 'system';
+//   content: string;
+//   timestamp: Date;
+//   metadata?: Record<string, any>;
+// }
+
+// export interface ChatSession {
+//   id: string;
+//   workflowId?: string;
+//   messages: ChatMessage[];
+//   isActive: boolean;
+//   startedAt: Date;
+//   lastActivity: Date;
+// }
 export interface ChatMessage {
   id: string;
-  type: 'user' | 'assistant' | 'system';
   content: string;
-  timestamp: Date;
-  metadata?: Record<string, any>;
+  role: 'user' | 'assistant';
+  timestamp: string;
 }
 
 export interface ChatSession {
   id: string;
   workflowId?: string;
-  messages: ChatMessage[];
-  isActive: boolean;
-  startedAt: Date;
-  lastActivity: Date;
+  createdAt: string;
+  updatedAt: string;
 }

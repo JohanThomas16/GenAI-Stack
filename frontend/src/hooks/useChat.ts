@@ -1,141 +1,78 @@
-import { useState, useCallback, useEffect } from 'react';
-import { useMutation, useQuery } from 'react-query';
-import { chatAPI } from '../services/api';
-import { ChatMessage, ChatSession } from '../types/nodes';
-import { wsService } from '../services/websocket';
+import { useState } from 'react';
+import { useMutation, UseMutationResult } from 'react-query';
 import toast from 'react-hot-toast';
+import { chatAPI } from '../services/api';
+import { ChatSession, ChatMessage } from '../types/nodes';
 
 export const useChat = (workflowId?: string) => {
   const [currentSession, setCurrentSession] = useState<ChatSession | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isTyping, setIsTyping] = useState(false);
 
-  // Fetch chat sessions
-  const { data: sessions } = useQuery(
-    'chat-sessions',
-    () => chatAPI.getSessions().then(res => res.data),
-    {
-      onError: () => toast.error('Failed to load chat sessions'),
-    }
-  );
 
-  // Create session mutation
-  const createSessionMutation = useMutation(
-    (workflowId?: string) => chatAPI.createSession(workflowId),
+  const createSessionMutation: UseMutationResult<
+
+    ChatSession,
+ 
+    unknown,
+ 
+    void
+  > = useMutation(
+    () => chatAPI.createSession(workflowId).then(res => res.data),
     {
-      onSuccess: (response) => {
-        setCurrentSession(response.data);
+      onSuccess: session => {
+        setCurrentSession(session);
         setMessages([]);
       },
-      onError: () => toast.error('Failed to create chat session'),
+      onError: () => {
+        toast.error('Failed to create chat session');
+      },
     }
   );
 
-  // Send message mutation
-  const sendMessageMutation = useMutation(
-    ({ message, workflowId, sessionId }: { 
-      message: string; 
-      workflowId?: string; 
-      sessionId?: string;
-    }) => chatAPI.sendMessage(message, workflowId, sessionId),
+  const sendMessageMutation: UseMutationResult<
+    ChatMessage,
+    unknown,
+    { message: string; sessionId?: string }
+  > = useMutation(
+    ({ message, sessionId }) =>
+      chatAPI
+        .sendMessage(message, workflowId, sessionId || currentSession?.id)
+        .then(res => res.data),
     {
-      onSuccess: (response) => {
-        const assistantMessage: ChatMessage = {
-          id: Date.now().toString(),
-          type: 'assistant',
-          content: response.data.response,
-          timestamp: new Date(),
-          metadata: {
-            executionTime: response.data.execution_time,
-            tokensUsed: response.data.tokens_used,
-            model: response.data.model_used,
-          },
-        };
-        setMessages(prev => [...prev, assistantMessage]);
-        setIsTyping(false);
+      onMutate: () => {
+        setIsTyping(true);
       },
-      onError: (error) => {
+      onSuccess: msg => {
+        setIsTyping(false);
+        setMessages(prev => [...prev, msg]);
+      },
+      onError: () => {
         setIsTyping(false);
         toast.error('Failed to send message');
-        console.error('Chat error:', error);
       },
     }
   );
 
-  const sendMessage = useCallback((content: string) => {
-    if (!content.trim()) return;
+  const sendMessage = (message: string) => {
+    if (!message.trim()) return;
 
-    const userMessage: ChatMessage = {
-      id: Date.now().toString(),
-      type: 'user',
-      content: content.trim(),
-      timestamp: new Date(),
+    const userMsg: ChatMessage = {
+      id: `user-${Date.now()}`,
+      content: message,
+      role: 'user',
+      timestamp: new Date().toISOString(),
     };
-
-    setMessages(prev => [...prev, userMessage]);
-    setIsTyping(true);
-
-    sendMessageMutation.mutate({
-      message: content,
-      workflowId,
-      sessionId: currentSession?.id,
-    });
-  }, [workflowId, currentSession?.id, sendMessageMutation]);
-
-  const startNewSession = useCallback(() => {
-    createSessionMutation.mutate(workflowId);
-  }, [workflowId, createSessionMutation]);
-
-  const clearMessages = useCallback(() => {
-    setMessages([]);
-  }, []);
-
-  // Initialize session on mount
-  useEffect(() => {
-    if (workflowId && !currentSession) {
-      startNewSession();
-    }
-  }, [workflowId, currentSession, startNewSession]);
-
-  // WebSocket connection for real-time updates
-  useEffect(() => {
-    if (currentSession?.id) {
-      wsService.connect(currentSession.id).then(() => {
-        wsService.onMessage((data) => {
-          if (data.type === 'message') {
-            const message: ChatMessage = {
-              id: data.id || Date.now().toString(),
-              type: data.sender === 'assistant' ? 'assistant' : 'user',
-              content: data.content,
-              timestamp: new Date(data.timestamp),
-              metadata: data.metadata,
-            };
-            setMessages(prev => [...prev, message]);
-          }
-        });
-      }).catch(console.error);
-
-      return () => {
-        wsService.disconnect();
-      };
-    }
-  }, [currentSession?.id]);
+    setMessages(prev => [...prev, userMsg]);
+    sendMessageMutation.mutate({ message, sessionId: currentSession?.id });
+  };
 
   return {
-    // Data
-    sessions,
     currentSession,
     messages,
     isTyping,
-    
-    // Loading states
-    isLoading: sendMessageMutation.isLoading,
-    isCreatingSession: createSessionMutation.isLoading,
-    
-    // Actions
+    isLoading: createSessionMutation.isLoading || sendMessageMutation.isLoading,
+    createSession: () => createSessionMutation.mutate(),
     sendMessage,
-    startNewSession,
-    clearMessages,
-    setCurrentSession,
   };
 };
