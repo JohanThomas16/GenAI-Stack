@@ -3,8 +3,7 @@ import { QueryClient, QueryClientProvider } from 'react-query';
 import { WorkflowCanvasWrapper } from './components/workflow/WorkflowCanvas';
 import { WorkflowNode, WorkflowEdge } from './types/workflow';
 import { workflowAPI } from './services/api';
-import type { Workflow } from './types/workflow'; 
-
+import type { Workflow } from './types/workflow';
 import './styles/globals.css';
 
 const queryClient = new QueryClient({
@@ -31,11 +30,24 @@ function App() {
   };
 
   const handleSave = async () => {
-    // Save handler code here...
+    try {
+      const workflowToSave: Omit<Workflow, 'id'> = {
+        name: 'My Workflow',      // You can make this dynamic
+        description: '',           // Optional description
+        nodes,
+        edges,
+      };
+      await workflowAPI.createWorkflow(workflowToSave);
+      alert('Workflow saved successfully!');
+    } catch (error) {
+      alert('Failed to save workflow. See console for details.');
+      console.error(error);
+    }
   };
 
   const handleOpenChat = () => {
-    // Open chat logic here...
+    // Placeholder: open your chat UI or redirect
+    alert('Open Chat clicked - implement navigation or modal');
   };
 
   return (
@@ -55,3 +67,5 @@ function App() {
     </div>
   );
 }
+
+export default App;
